@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Chatbot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+	<style>
+	body {
+		font-family: sans-serif;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		min-height: 100vh;
+		background-color: #FFB534;
+	}
+	
+	#chat-container {
+		background-color: #FBF6EE;
+		border-radius: 10px;
+		padding: 20px;
+		box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+		width: 400px;
+	}
+	
+	h1 {
+		text-align: center;
+		margin-bottom: 20px;
+	}
+	
+	#chat-history {
+		height: 300px;
+		overflow-y: scroll;
+	}
+	
+	.user-message {
+		text-align: right;
+		padding: 10px;
+		background-color: #f0f0f0;
+		border-radius: 10px;
+		margin-bottom: 5px;
+	}
+	
+	.bot-message {
+		text-align: left;
+		padding: 10px;
+		background-color: #C1F2B0;
+		border-radius: 10px;
+		margin-bottom: 5px;
+	}
+	
+	form {
+		display: flex;
+	}
+	
+	input {
+		flex-grow: 1;
+		margin-right: 10px;
+		padding: 10px;
+		border: 1px solid #ccc;
+		border-radius: 5px;
+	}
+	
+	button {
+		background-color: #65B741;
+		color: white;
+		border: none;
+		padding: 10px 15px;
+		border-radius: 5px;
+		cursor: pointer;
+	}
+
+    #reset-button {
+        margin-left: 2px;
+    }
+	
+	#loader {
+		display: none;
+		/* Hide by default */
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+	}
+	</style>
+</head>
+
+<body>
+	<div id="chat-container">
+		<h1>KULI.IN Chatbot</h1>
+		<div id="chat-history"></div>
+		<form id="chat-form">
+			<input type="text" id="user-input" placeholder="Enter your message">
+			<button type="submit">Send</button>
+            <button type="button" id="reset-button">Reset Chat</button>
+		</form>
+	</div>
+	<div id="loader"> <img src="loader.gif" width="150px" alt="Loading..."> </div>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+	<script>
+	const chatHistory = document.getElementById('chat-history');
+	const userInput = document.getElementById('user-input');
+	const form = document.getElementById('chat-form');
+    const resetButton = document.getElementById('reset-button');
+	async function sendMessage() {
+		const userMessage = userInput.value;
+		userInput.value = ''; // Clear input field
+		console.log(userMessage)
+		try {
+			const response = await fetch('/chat', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					userInput: userMessage
+				}),
+			});
+			const data = await response.json();
+			console.log(data)
+			const botMessage = data.response;
+			console.log(botMessage)
+				// tambahke history chat
+			chatHistory.innerHTML += marked.parse(`<div class="user-message">${userMessage}</div>`);
+			chatHistory.innerHTML += marked.parse(`<div class="bot-message">${botMessage}</div>`);
+			chatHistory.scrollTop = chatHistory.scrollHeight;
+		} catch(error) {
+			console.error('Error:', error);
+		}
+	}
+	form.addEventListener('submit', (event) => {
+		event.preventDefault(); 
+		const loader = document.getElementById('loader');
+		loader.style.display = 'block'; // Show the loader
+		sendMessage().finally(() => {
+			loader.style.display = 'none';
+		});;
+	});
+
+    resetButton.addEventListener('click', (event) => {
+        event.preventDefault(); 
+        const loader = document.getElementById('loader');
+        loader.style.display = 'block'; // Show the loader
+        chatHistory.innerHTML = '';
+        loader.style.display = 'none';
+    });
+	</script>
+</body>
+
+</html>
